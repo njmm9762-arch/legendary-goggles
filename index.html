@@ -12,7 +12,6 @@ video.bg{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-i
 .container{width:95%;max-width:420px;margin:auto;background:rgba(10,10,10,.75);backdrop-filter:blur(10px);border-radius:20px;padding:20px;border:1px solid rgba(0,255,255,.25);box-shadow:0 0 30px rgba(0,255,255,.35);animation:cinema 1.2s ease}
 @keyframes cinema{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
 h1{text-align:center;color:#00ffff;text-shadow:0 0 10px}
-.timer{text-align:center;margin-bottom:10px;color:#00ffff}
 input,button{width:100%;padding:13px;margin-bottom:10px;border-radius:12px;border:none;font-size:15px}
 input{background:#0b0b0b;color:#fff;border:1px solid rgba(0,255,255,.3)}
 input:focus{outline:none;box-shadow:0 0 10px #00ffff}
@@ -24,6 +23,8 @@ button:disabled{background:#333;color:#777}
 .player{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid rgba(255,255,255,.1)}
 .first{color:#ffd700;text-shadow:0 0 10px gold;font-weight:bold}
 .footer{text-align:center;font-size:13px;opacity:.8;margin-top:10px}
+.result-block{border:1px solid #00ffff;margin:10px 0;padding:10px;border-radius:12px;background:rgba(0,255,255,.1)}
+.result-block p{margin:5px 0;font-size:15px}
 </style>
 </head>
 <body>
@@ -33,22 +34,18 @@ button:disabled{background:#333;color:#777}
 </video>
 <div class="overlay"></div>
 
-<audio id="enter" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
-
 <div class="container" id="app">
 <h1>PMGC – التقديم</h1>
-<div class="timer" id="timer"></div>
 
 <div id="form">
 <input id="name" placeholder="الاسم">
 <input id="pid" placeholder="ID اللاعب">
 <input id="rank" placeholder="الرانك">
 <input id="ping" placeholder="البنج">
-<button type="button" onclick="submitForm()">تقديم</button>
+<button type="button" onclick="submitAndShare()">تقديم & إرسال واتساب</button>
 </div>
 
 <button class="admin" onclick="openAdmin()">لوحة التحكم</button>
-<button class="share" onclick="shareWhatsApp()">مشاركة على واتساب</button>
 <button class="share" onclick="showResults()">عرض النتائج</button>
 
 <div class="panel" id="adminPanel">
@@ -66,100 +63,90 @@ button:disabled{background:#333;color:#777}
 </div>
 
 <script>
-window.onload=()=>{
-document.getElementById("enter").play();
-if(navigator.vibrate) navigator.vibrate(200);
-}
-
-// الإعدادات
 const PASSWORD="PMGC2026";
-const TOTAL=24*60*60*1000;
-
-// الوقت
-let start=localStorage.getItem("startTime");
-if(!start){start=Date.now();localStorage.setItem("startTime",start);}
-start=parseInt(start);
 
 // حالة التقديم
 if(!localStorage.getItem("status")) localStorage.setItem("status","open");
 
-// عداد الوقت
-function updateTimer(){
-  const r=TOTAL-(Date.now()-start);
-  const tEl=document.getElementById("timer");
-  if(r<=0){tEl.innerText="❌ انتهى التقديم";localStorage.setItem("status","closed");return;}
-  const h=Math.floor(r/3600000),
-        m=Math.floor(r%3600000/60000),
-        s=Math.floor(r%60000/1000);
-  tEl.innerText=`⏳ ${h}س ${m}د ${s}ث`;
-}
-setInterval(updateTimer,1000);
-updateTimer();
-
-// التقديم
-function submitForm(){
-const name=document.getElementById("name").value.trim();
-const id=document.getElementById("pid").value.trim();
-const rank=document.getElementById("rank").value.trim();
-const ping=document.getElementById("ping").value.trim();
-if(localStorage.getItem("status")=="closed"){alert("التقديم مقفول");return;}
-if(!name||!id||!rank||!ping){alert("⚠️ أكمل كل البيانات");return;}
-let players=JSON.parse(localStorage.getItem("players")||"[]");
-players.push({name,id,rank,ping,points:Math.floor(Math.random()*10+1)});
-localStorage.setItem("players",JSON.stringify(players));
-alert("✅ تم التقديم بنجاح");
-document.getElementById("name").value="";
-document.getElementById("pid").value="";
-document.getElementById("rank").value="";
-document.getElementById("ping").value="";
-updateCount();
-}
-
-// لوحة التحكم
-function openAdmin(){
-const p=prompt("كلمة السر");
-if(p===PASSWORD){
-document.getElementById("adminPanel").style.display="block";
-updateCount();
-}else alert("خطأ");
-}
-function updateCount(){
-let p=JSON.parse(localStorage.getItem("players")||"[]");
-document.getElementById("count").innerText=p.length;
-}
+// فتح/قفل التقديم
 function closeApply(){localStorage.setItem("status","closed");}
 function openApply(){localStorage.setItem("status","open");}
 
-// عرض النتائج
-function showResults(){
-const results=document.getElementById("results");
-results.style.display="block";
-let p=JSON.parse(localStorage.getItem("players")||"[]");
-p.sort((a,b)=>b.points-a.points);
-results.innerHTML="<h3>النتائج</h3>";
-p.forEach((x,i)=>{
-results.innerHTML+=`<div class="player ${i==0?'first':''}">${i==0?'👑 ':''}${x.name} <span>${x.points} بوينت</span></div>`;
-if(i==0){
-speechSynthesis.speak(new SpeechSynthesisUtterance(`المركز الأول ${x.name} بعدد ${x.points} بوينت`));
-}
-});
-}
+// التقديم + إرسال واتساب مباشرة
+function submitAndShare(){
+  if(localStorage.getItem("status")=="closed"){alert("التقديم مقفول"); return;}
+  const name=document.getElementById("name").value.trim();
+  const id=document.getElementById("pid").value.trim();
+  const rank=document.getElementById("rank").value.trim();
+  const ping=document.getElementById("ping").value.trim();
+  if(!name||!id||!rank||!ping){alert("⚠️ أكمل كل البيانات"); return;}
 
-// مشاركة على واتساب بالنص المثبت
-function shareWhatsApp(){
-const name=document.getElementById("name").value.trim();
-const id=document.getElementById("pid").value.trim();
-const rank=document.getElementById("rank").value.trim();
-const ping=document.getElementById("ping").value.trim();
-if(!name||!id||!rank||!ping){alert("⚠️ أكمل كل البيانات قبل المشاركة");return;}
-const text=`🔥 تم التقديم في بطولة PMGC 🔥
+  // حفظ البيانات
+  let players=JSON.parse(localStorage.getItem("players")||"[]");
+  players.push({name,id,rank,ping,points:Math.floor(Math.random()*10+1)});
+  localStorage.setItem("players",JSON.stringify(players));
+  updateCount();
+
+  // إنشاء نص واتساب مرتب
+  const text=`🔥 تم التقديم في بطولة PMGC 🔥
+====================
 الاسم: ${name}
 ID: ${id}
 الرنك: ${rank}
 البنج: ${ping}
+====================
 رابط التقديم: https://njmm9762-arch.github.io/Stor-negm-gaming-nambar-1/`;
-window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");
+
+  // فتح واتساب تلقائي
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");
+
+  // تنظيف الفورم
+  document.getElementById("name").value="";
+  document.getElementById("pid").value="";
+  document.getElementById("rank").value="";
+  document.getElementById("ping").value="";
+}
+
+// تحديث عدد المتقدمين
+function updateCount(){
+  const players=JSON.parse(localStorage.getItem("players")||"[]");
+  document.getElementById("count").innerText=players.length;
+}
+
+// لوحة التحكم
+function openAdmin(){
+  const p=prompt("كلمة السر");
+  if(p===PASSWORD){
+    document.getElementById("adminPanel").style.display="block";
+    updateCount();
+  }else alert("خطأ");
+}
+
+// عرض النتائج بشكل منفصل لكل لاعب
+function showResults(){
+  const results=document.getElementById("results");
+  results.style.display="block";
+  let p=JSON.parse(localStorage.getItem("players")||"[]");
+  p.sort((a,b)=>b.points-a.points);
+  results.innerHTML="<h3>النتائج</h3>";
+  p.forEach((x,i)=>{
+    results.innerHTML+=
+    `<div class="result-block ${i==0?'first':''}">
+      <p>${i==0?'👑 المركز الأول':'المركز '+(i+1)}</p>
+      <p>الاسم: ${x.name}</p>
+      <p>ID: ${x.id}</p>
+      <p>الرنك: ${x.rank}</p>
+      <p>البنج: ${x.ping}</p>
+      <p>النقاط: ${x.points} بوينت</p>
+    </div>`;
+    if(i==0){
+      speechSynthesis.speak(new SpeechSynthesisUtterance(
+        `المركز الأول ${x.name} بعدد ${x.points} بوينت`
+      ));
+    }
+  });
 }
 </script>
+
 </body>
 </html>
