@@ -5,146 +5,267 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PMGC – التقديم الرسمي</title>
 <style>
-*{box-sizing:border-box;font-family:"Cairo",sans-serif}
-body{margin:0;color:#fff;overflow:hidden}
-video.bg{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-2;}
-.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:-1;}
-.container{width:95%;max-width:420px;margin:auto;background:rgba(10,10,10,.75);backdrop-filter:blur(10px);border-radius:20px;padding:20px;border:1px solid rgba(0,255,255,.25);box-shadow:0 0 30px rgba(0,255,255,.35);animation:cinema 1.2s ease}
-@keyframes cinema{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-h1{text-align:center;color:#00ffff;text-shadow:0 0 10px}
-input,button{width:100%;padding:13px;margin-bottom:10px;border-radius:12px;border:none;font-size:15px}
-input{background:#0b0b0b;color:#fff;border:1px solid rgba(0,255,255,.3)}
-input:focus{outline:none;box-shadow:0 0 10px #00ffff}
-button{background:linear-gradient(135deg,#00ffff,#008b8b);color:#000;font-weight:bold;box-shadow:0 0 15px rgba(0,255,255,.6);cursor:pointer}
-button:disabled{background:#333;color:#777}
-.admin{background:linear-gradient(135deg,#ff9800,#ff6a00)}
-.share{background:linear-gradient(135deg,#25D366,#128C7E)}
-.panel{display:none;background:#0a0a0a;padding:15px;border-radius:15px;border:1px solid rgba(0,255,255,.3)}
-.player{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid rgba(255,255,255,.1)}
-.first{color:#ffd700;text-shadow:0 0 10px gold;font-weight:bold}
-.footer{text-align:center;font-size:13px;opacity:.8;margin-top:10px}
-.result-block{border:1px solid #00ffff;margin:10px 0;padding:10px;border-radius:12px;background:rgba(0,255,255,.1)}
-.result-block p{margin:5px 0;font-size:15px}
+  body {
+    margin: 0;
+    font-family: 'Cairo', sans-serif;
+    background: #000;
+    color: #fff;
+    overflow-x: hidden;
+  }
+  .bg-video {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    object-fit: cover;
+    z-index:-1;
+    filter: brightness(0.5);
+  }
+  .container {
+    max-width: 500px;
+    margin: 60px auto;
+    padding: 25px;
+    background: rgba(0,0,0,0.85);
+    border-radius: 25px;
+    border: 1px solid #0ff4;
+    box-shadow: 0 0 50px #0ff4;
+    position: relative;
+  }
+  h1 {
+    text-align:center;
+    color: #0ff;
+    text-shadow: 0 0 15px #0ff;
+  }
+  input, button {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border-radius: 12px;
+    font-size: 16px;
+    border: none;
+  }
+  input {
+    background: #111;
+    color: #fff;
+    border: 1px solid #0ff4;
+  }
+  input:focus {
+    outline: none;
+    box-shadow: 0 0 12px #0ff;
+  }
+  button {
+    background: linear-gradient(135deg,#0ff,#088);
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #0ff;
+  }
+  button.admin {
+    background: linear-gradient(135deg,#f90,#f60);
+  }
+  button.share {
+    background: linear-gradient(135deg,#25D366,#128C7E);
+  }
+  .panel {
+    display: none;
+    background: #111;
+    padding: 15px;
+    border-radius: 15px;
+    border: 1px solid #0ff4;
+    margin-top: 15px;
+  }
+  .result {
+    border:1px solid #0ff;
+    margin:10px 0;
+    padding:10px;
+    border-radius:12px;
+    background: rgba(0,255,255,0.1);
+  }
+  .result.first {
+    border-color: gold;
+    background: rgba(255,215,0,0.2);
+  }
+  .footer {
+    text-align:center;
+    font-size:13px;
+    opacity:0.8;
+    margin-top:10px;
+  }
+  .inner-video {
+    width:100%;
+    border-radius:15px;
+    margin-bottom:15px;
+  }
+  canvas {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:9999;
+  }
 </style>
 </head>
 <body>
 
-<video class="bg" autoplay muted loop>
-<source src="https://cdn.coverr.co/videos/coverr-soldier-walking-in-smoke-1576/1080p.mp4">
+<video class="bg-video" autoplay muted loop>
+  <source src="https://cdn.coverr.co/videos/coverr-soldier-walking-in-smoke-1576/1080p.mp4" type="video/mp4">
 </video>
-<div class="overlay"></div>
 
-<div class="container" id="app">
-<h1>PMGC – التقديم</h1>
+<canvas id="confetti"></canvas>
 
-<div id="form">
-<input id="name" placeholder="الاسم">
-<input id="pid" placeholder="ID اللاعب">
-<input id="rank" placeholder="الرانك">
-<input id="ping" placeholder="البنج">
-<button type="button" onclick="submitAndShare()">تقديم & إرسال واتساب</button>
-</div>
+<div class="container">
+  <h1>PMGC – التقديم</h1>
 
-<button class="admin" onclick="openAdmin()">لوحة التحكم</button>
-<button class="share" onclick="showResults()">عرض النتائج</button>
+  <video class="inner-video" autoplay muted loop>
+    <source src="https://cdn.coverr.co/videos/coverr-gamer-on-computer-1561/1080p.mp4" type="video/mp4">
+  </video>
 
-<div class="panel" id="adminPanel">
-<p>عدد المتقدمين: <span id="count">0</span></p>
-<button onclick="closeApply()">قفل التقديم</button>
-<button onclick="openApply()">فتح التقديم</button>
-</div>
+  <input id="name" placeholder="الاسم">
+  <input id="pid" placeholder="ID اللاعب">
+  <input id="rank" placeholder="الرانك">
+  <input id="ping" placeholder="البنج">
+  <button onclick="submitForm()">تقديم & إرسال واتساب</button>
 
-<div class="panel" id="results"></div>
+  <button class="admin" onclick="openAdmin()">لوحة التحكم</button>
+  <button class="share" onclick="showResults()">عرض النتائج</button>
 
-<div class="footer">
-📞 2001270382949<br>
-روم 1 شغال – 2 / 3 / 4 جاري التحديث
-</div>
+  <div class="panel" id="adminPanel">
+    <p>عدد المتقدمين: <span id="count">0</span></p>
+    <button onclick="closeApply()">قفل التقديم</button>
+    <button onclick="openApply()">فتح التقديم</button>
+    <button onclick="clearPlayers()">مسح المتقدمين</button>
+  </div>
+
+  <div class="panel" id="results"></div>
+
+  <div class="footer">
+    📞 2001270382949<br>
+    روم 1 شغال – 2 / 3 / 4 جاري التحديث
+  </div>
 </div>
 
 <script>
-const PASSWORD="PMGC2026";
+// الإعدادات الأساسية
+const PASSWORD='PMGC2026';
+if(!localStorage.getItem('status')) localStorage.setItem('status','open');
 
-// حالة التقديم
-if(!localStorage.getItem("status")) localStorage.setItem("status","open");
+function updateCount() {
+  document.getElementById('count').innerText = (JSON.parse(localStorage.getItem('players')||'[]')).length;
+}
+function closeApply(){ localStorage.setItem('status','closed'); }
+function openApply(){ localStorage.setItem('status','open'); }
+function clearPlayers(){ 
+  if(confirm('هل تريد مسح جميع المتقدمين؟')){ 
+    localStorage.removeItem('players'); 
+    updateCount(); 
+    alert('تم مسح المتقدمين'); 
+  } 
+}
+function openAdmin(){
+  const p = prompt('كلمة السر');
+  if(p===PASSWORD){
+    document.getElementById('adminPanel').style.display='block';
+    updateCount();
+  } else alert('كلمة سر خاطئة');
+}
 
-// فتح/قفل التقديم
-function closeApply(){localStorage.setItem("status","closed");}
-function openApply(){localStorage.setItem("status","open");}
+// التقديم وفتح واتساب
+function submitForm(){
+  if(localStorage.getItem('status')==='closed'){ alert('التقديم مقفول'); return; }
 
-// التقديم + إرسال واتساب مباشرة
-function submitAndShare(){
-  if(localStorage.getItem("status")=="closed"){alert("التقديم مقفول"); return;}
-  const name=document.getElementById("name").value.trim();
-  const id=document.getElementById("pid").value.trim();
-  const rank=document.getElementById("rank").value.trim();
-  const ping=document.getElementById("ping").value.trim();
-  if(!name||!id||!rank||!ping){alert("⚠️ أكمل كل البيانات"); return;}
+  const name = document.getElementById('name').value.trim();
+  const pid = document.getElementById('pid').value.trim();
+  const rank = document.getElementById('rank').value.trim();
+  const ping = document.getElementById('ping').value.trim();
+  if(!name || !pid || !rank || !ping){ alert('⚠️ أكمل كل البيانات'); return; }
 
-  // حفظ البيانات
-  let players=JSON.parse(localStorage.getItem("players")||"[]");
-  players.push({name,id,rank,ping,points:Math.floor(Math.random()*10+1)});
-  localStorage.setItem("players",JSON.stringify(players));
+  let players = JSON.parse(localStorage.getItem('players')||'[]');
+  const points = Math.floor(Math.random()*10+1);
+  const date = new Date().toLocaleString();
+  players.push({name,pid,rank,ping,points,date});
+  localStorage.setItem('players',JSON.stringify(players));
   updateCount();
 
-  // إنشاء نص واتساب مرتب
-  const text=`🔥 تم التقديم في بطولة PMGC 🔥
-====================
-الاسم: ${name}
-ID: ${id}
-الرنك: ${rank}
-البنج: ${ping}
-====================
-رابط التقديم: https://njmm9762-arch.github.io/Stor-negm-gaming-nambar-1/`;
+  const waNumber = '2001270382949';
+  const waText = `🔥 تم التقديم في بطولة PMGC 🔥\\n====================\\nالاسم: ${name}\\nID: ${pid}\\nالرنك: ${rank}\\nالبنج: ${ping}\\nالتاريخ: ${date}\\n====================`;
+  window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(waText)}`, '_blank');
 
-  // فتح واتساب تلقائي
-  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");
-
-  // تنظيف الفورم
-  document.getElementById("name").value="";
-  document.getElementById("pid").value="";
-  document.getElementById("rank").value="";
-  document.getElementById("ping").value="";
+  document.getElementById('name').value='';
+  document.getElementById('pid').value='';
+  document.getElementById('rank').value='';
+  document.getElementById('ping').value='';
 }
 
-// تحديث عدد المتقدمين
-function updateCount(){
-  const players=JSON.parse(localStorage.getItem("players")||"[]");
-  document.getElementById("count").innerText=players.length;
-}
-
-// لوحة التحكم
-function openAdmin(){
-  const p=prompt("كلمة السر");
-  if(p===PASSWORD){
-    document.getElementById("adminPanel").style.display="block";
-    updateCount();
-  }else alert("خطأ");
-}
-
-// عرض النتائج بشكل منفصل لكل لاعب
+// عرض النتائج + Confetti للمركز الأول
 function showResults(){
-  const results=document.getElementById("results");
-  results.style.display="block";
-  let p=JSON.parse(localStorage.getItem("players")||"[]");
-  p.sort((a,b)=>b.points-a.points);
-  results.innerHTML="<h3>النتائج</h3>";
-  p.forEach((x,i)=>{
-    results.innerHTML+=
-    `<div class="result-block ${i==0?'first':''}">
+  const results = document.getElementById('results');
+  results.style.display='block';
+  let players = JSON.parse(localStorage.getItem('players')||'[]');
+  players.sort((a,b)=>b.points-a.points);
+  results.innerHTML = '<h3>النتائج</h3>';
+  players.forEach((p,i)=>{
+    results.innerHTML += `<div class="result ${i==0?'first':''}">
       <p>${i==0?'👑 المركز الأول':'المركز '+(i+1)}</p>
-      <p>الاسم: ${x.name}</p>
-      <p>ID: ${x.id}</p>
-      <p>الرنك: ${x.rank}</p>
-      <p>البنج: ${x.ping}</p>
-      <p>النقاط: ${x.points} بوينت</p>
+      <p>الاسم: ${p.name}</p>
+      <p>ID: ${p.pid}</p>
+      <p>الرنك: ${p.rank}</p>
+      <p>البنج: ${p.ping}</p>
+      <p>النقاط: ${p.points} بوينت</p>
+      <p>التاريخ: ${p.date}</p>
     </div>`;
     if(i==0){
-      speechSynthesis.speak(new SpeechSynthesisUtterance(
-        `المركز الأول ${x.name} بعدد ${x.points} بوينت`
-      ));
+      // صوت
+      let msg = new SpeechSynthesisUtterance(`المركز الأول ${p.name} بعدد ${p.points} بوينت`);
+      msg.rate = 1.2; msg.pitch = 1.5; speechSynthesis.speak(msg);
+      // Confetti
+      launchConfetti();
     }
   });
+}
+
+// Confetti
+function launchConfetti(){
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const confettis = [];
+  for(let i=0;i<200;i++){
+    confettis.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*6+4,
+      d: Math.random()*50+10,
+      color: `hsl(${Math.random()*360},100%,50%)`,
+      tilt: Math.random()*10-10
+    });
+  }
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confettis.forEach(c=>{
+      ctx.beginPath();
+      ctx.moveTo(c.x + c.tilt, c.y);
+      ctx.lineTo(c.x + c.tilt + c.r/2, c.y + c.r);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = c.color;
+      ctx.stroke();
+    });
+    update();
+  }
+  function update(){
+    confettis.forEach(c=>{
+      c.y += 2;
+      if(c.y>canvas.height){ c.y = 0; c.x = Math.random()*canvas.width; }
+    });
+  }
+  setInterval(draw,20);
 }
 </script>
 
